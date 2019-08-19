@@ -1,11 +1,11 @@
 <template>
   <view class="container">
-    Home topic list
+    My WEB
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
 
-  export default class Index extends wepy.page {}
+  export default class User extends wepy.page {}
 </script>
