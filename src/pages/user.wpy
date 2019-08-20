@@ -1,11 +1,31 @@
 <template>
-  <view class="container">
-    My WEB
+  <view class="page">
+    <view wx:if="{{ loggedIn }}">
+      Has logged
+    </view>
+    <view wx:else>
+      <navigator class="weui-cell weui-cell_access" url="/pages/auth/login">
+        <view class="weui-cell__bd">Not logged in</view>
+        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+      </navigator>
+    </view>
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
 
-  export default class User extends wepy.page {}
+  export default class User extends wepy.page {
+    config = {
+      navigationBarTitleText: 'Mine'
+    }
+    data = {
+      loggedIn: false
+    }
+    onShow() {
+      if (wepy.getStorageSync('access_token')) {
+        this.loggedIn = true
+      }
+    }
+  }
 </script>
