@@ -15,6 +15,7 @@
 
         <view class="weui-cells__title">GameBBS Register your phone</view>
 
+        <!-- 手机号 -->
         <view class="weui-cells__title {{ errors.phone ? 'weui-cell_warn' : ''}}">Phone number</view>
         <view class="weui-cells weui-cells_after-title">
           <view class="weui-cell weui-cell_input {{ errors.phone ? 'weui-cell_warn' : ''}}">
@@ -29,12 +30,54 @@
         </view>
         <view wx:if="{{ errors.phone }}" class="weui-cells__tips error-message">{{ errors.phone[0] }}</view>
 
+        <!-- 短信验证码 -->
+        <view class="weui-cells__title {{ errors.verification_code ? 'weui-cell_warn' : ''}}">SMS Verification code</view>
+        <view class="weui-cells weui-cells_after-title">
+          <view class="weui-cell weui-cell_input {{ errors.verification_code ? 'weui-cell_warn' : ''}}">
+            <view class="weui-cell__bd">
+              <input class="weui-input" placeholder="Please enter SMS verification code" name="verification_code" />
+            </view>
+            <view class="weui-cell__ft">
+              <icon wx:if="{{ errors.verification_code }}" type = "warn" size="23" color="#E64340"></icon>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{ errors.verification_code }}" class="weui-cells__tips error-message">{{ errors.verification_code[0] }}</view>
+
+        <!-- 姓名 -->
+        <view class="weui-cells__title {{ errors.name ? 'weui-cell_warn' : ''}}">Name</view>
+        <view class="weui-cells weui-cells_after-title">
+          <view class="weui-cell weui-cell_input {{ errors.name ? 'weui-cell_warn' : ''}}">
+            <view class="weui-cell__bd">
+              <input class="weui-input" placeholder="Please enter your name" name="name" />
+            </view>
+            <view class="weui-cell__ft">
+              <icon wx:if="{{ errors.name }}" type="warn" size="23" color="#E64340"></icon>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{ errors.name }}" class="weui-cells__tips error-message">{{ errors.name[0] }}</view>
+
+        <!-- 密码 -->
+        <view class="weui-cells__title {{ errors.password ? 'weui-cell_warn' : ''}}">Password</view>
+        <view class="weui-cells weui-cells_after-title">
+          <view class="weui-cell weui-cell_input {{ errors.password ? 'weui-cell_warn' : ''}}">
+            <view class="weui-cell__bd">
+              <input class="weui-input" placeholder="Please enter your password" name="password" type="password" />
+            </view>
+            <view class="weui-cell__ft">
+              <icon wx:if="{{ errors.password }}" type="warn" size="23" color="#E64340"></icon>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{ errors.password }}" class="weui-cells__tips error-message">{{ errors.password[0] }}</view>
+
         <view class="weui-btn-area">
           <button class="weui-btn" type="primary" formType="submit">Register</button>
         </view>
       </form>
 
-      <!-- Verification code input modal box -->
+      <!-- 验证码输入模态框 -->
       <modal class="modal" hidden="{{ captchaModalHidden }}" no-cancel bindconfirm="sendVerificationCode">
         <view wx:if="{{ errors.captchaValue }}" class="weui-cells__tips error-message">{{ errors.captchaValue[0] }}</view>
         <view class="weui-cell weui-cell_input weui-cell_vcode">
@@ -82,6 +125,82 @@
       this.captcha = {}
       this.verificationCode = {}
       this.errors = {}
+    }
+    // 表单提交
+    async submit (e) {
+      this.errors = {}
+      // 检查验证码是否已发送
+      if (!this.verificationCode.key) {
+        wepy.showToast({
+          title: 'Please send a verification code',
+          icon: 'none',
+          duration: 2000
+        })
+        return false
+      }
+      // 检查验证码是否过期
+      if (new Date().getTime() > this.verificationCode.expiredAt) {
+        wepy.showToast({
+          title: 'Verification code has expired',
+          icon: 'none',
+          duration: 2000
+        })
+        this.resetRegister()
+        return false
+      }
+
+      try {
+        let formData = e.detail.value
+        formData.verification_key = this.verificationCode.key
+
+        let loginData = await wepy.login()
+        // 参数中增加code，用于获取 openid 绑定当前用户
+        formData.code = loginData.code
+
+        let registerResponse = await api.request({
+          url: 'weapp/users',
+          method: 'POST',
+          data: formData
+        })
+
+        // 验证码错误
+        if (registerResponse.statusCode === 401) {
+          this.errors.verification_code = ['Verification code error']
+          this.$apply()
+        }
+
+        // 表单错误
+        if (registerResponse.statusCode === 422) {
+          this.errors = registerResponse.data.errors
+          this.$apply()
+        }
+
+        // 注册成功，记录token
+        if (registerResponse.statusCode === 201) {
+          wepy.setStorageSync('access_token', registerResponse.data.meta.access_token)
+          wepy.setStorageSync('access_token_expired_at', new Date().getTime() + registerResponse.data.meta.expires_in * 1000)
+          // 设置用户信息
+          wepy.setStorageSync('user', registerResponse.data)
+
+          wepy.showToast({
+            title: 'Register success',
+            icon: 'success'
+          })
+
+          // 跳转到我的页面
+          setTimeout(function() {
+            wepy.switchTab({
+              url: '/pages/user'
+            })
+          }, 2000)
+        }
+      } catch (err) {
+        console.log(err)
+        wepy.showModal({
+          title: 'Prompt',
+          content: 'Server error, please contact the administrator'
+        })
+      }
     }
     // 获取图片验证码
     async getCaptchaCode() {
