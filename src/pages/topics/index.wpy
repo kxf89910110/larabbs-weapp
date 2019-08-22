@@ -182,12 +182,12 @@
       }
     }
     async getCategories() {
-      //从缓存中获取分类数据
+      // 从缓存中获取分类数据
       let categories = wepy.getStorageSync('categories')
 
       if (!categories) {
         try {
-          let categoriesResponse = await api.request('caqtegories')
+          let categoriesResponse = await api.request('categories')
           // 请求成功将数据添加至缓存
           if (categoriesResponse.statusCode === 200) {
             categories = categoriesResponse.data.data
