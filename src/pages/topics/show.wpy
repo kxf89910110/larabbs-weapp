@@ -35,7 +35,7 @@ page {
         <view class="weui-media-box__info topic-info">
           <view class="weui-media-box__info__meta">{{ topic.category.name }} • </view>
           <view class="weui-media-box__info__meta">{{ topic.updated_at_diff }} • </view>
-          <view class="weui-media-box__info__meta">{{ topic.reply_count }}</view>
+          <view class="weui-media-box__info__meta">{{ topic.reply_count }} replies</view>
         </view>
       </view>
       <view class="weui-article">
