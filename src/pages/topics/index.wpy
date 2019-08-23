@@ -103,11 +103,13 @@
   import wepy from 'wepy'
   import api from '@/utils/api'
   import topicList from '@/components/topicList'
+  import unreadCount from '@/mixins/unreadCount'
 
   export default class TopicIndex extends wepy.page {
     config = {
       enablePullDownRefresh: true
     }
+    mixins = [unreadCount]
     data = {
       // 话题数据
       topics: [],
